@@ -9,7 +9,6 @@ import Connection from '../wrtc/connection'
 import ConnectionsManagerServer from '../wrtc/connectionsManager'
 import HttpServer from '../httpServer/httpServer'
 import WebRTCConnection from '../wrtc/webrtcConnection'
-
 export class GeckosServer {
   private _port: number
   private _cors: Types.CorsOptions = { origin: '*', allowAuthorization: false }
@@ -40,17 +39,9 @@ export class GeckosServer {
     this._port = port
 
     // create the server
-    this.server = http.createServer()
-
-    // on server close event
-    this.server.once('close', () => {
-      console.log('on server close event')
-      this.connectionsManager.connections.forEach((connection: Connection) => connection.close())
-      bridge.removeAllListeners()
-    })
-
-    // add all routes
-    HttpServer(this.server, this.connectionsManager, this._cors)
+    if(!this.server) {
+      this.addServer(http.createServer());
+    }
 
     // start the server
     this.server.listen(port, () => {
@@ -70,7 +61,7 @@ export class GeckosServer {
     // on server close event
     this.server.once('close', () => {
       console.log('on server close event')
-      this.connectionsManager.connections.forEach((connection: Connection) => connection.close())
+      this.connectionsManager.clearConnections('closed')
       bridge.removeAllListeners()
     })
   }

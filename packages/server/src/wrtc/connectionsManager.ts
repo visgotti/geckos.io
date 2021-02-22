@@ -60,11 +60,8 @@ export default class ConnectionsManagerServer {
 
     pc.onStateChange(state => {
       // keep track of the maxMessageSize
+      connection.channel.webrtcConnection.state, connection.state
       if (state === 'connected') connection.channel.maxMessageSize = +connection.channel.dataChannel.maxMessageSize()
-
-      if (state === 'disconnected' || state === 'failed' || state === 'closed') {
-        this.deleteConnection(connection, state)
-      }
     })
 
     // pc.onconnectionstatechange = () => {
@@ -137,6 +134,12 @@ export default class ConnectionsManagerServer {
     }
   }
 
+  clearConnections(reason: string) {
+    this.connections.forEach(c => {
+      this.deleteConnection(c, reason)
+    });
+  }
+
   deleteConnection(connection: WebRTCConnection, state: string) {
     // console.log('deleteConnection', connection.id)
     connection.close()
@@ -145,9 +148,7 @@ export default class ConnectionsManagerServer {
       connection.removeAllListeners()
       connection.channel.eventEmitter.removeAllListeners()
     })
-
     connection.channel.eventEmitter.emit(EVENTS.DISCONNECT, state)
-
     if (this.connections.get(connection.id)) this.connections.delete(connection.id)
   }
 }
